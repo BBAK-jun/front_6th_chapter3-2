@@ -6,14 +6,14 @@ import { setup } from '../../utils/setup-render';
 
 describe('DeleteConfirmDialog', () => {
   it('isAll=true면 전체 삭제 문구가 표시된다', () => {
-    const {} = setup(
+    setup(
       <DeleteConfirmDialog isOpen={true} isAll={true} onCancel={() => {}} onConfirm={() => {}} />
     );
     expect(screen.getByText('정말 모든 반복 일정을 삭제하시겠습니까?')).toBeInTheDocument();
   });
 
   it('isAll=false면 단일 삭제 문구가 표시된다', () => {
-    const {} = setup(
+    setup(
       <DeleteConfirmDialog isOpen={true} isAll={false} onCancel={() => {}} onConfirm={() => {}} />
     );
     expect(screen.getByText('정말 이 일정을 삭제하시겠습니까?')).toBeInTheDocument();

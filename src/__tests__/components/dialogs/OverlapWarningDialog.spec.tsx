@@ -2,10 +2,11 @@ import { screen } from '@testing-library/react';
 import { vi } from 'vitest';
 
 import { OverlapWarningDialog } from '../../../components/dialogs/OverlapWarningDialog';
+import { buildEvent } from '../../utils/builders';
 import { setup } from '../../utils/setup-render';
 
 const sampleEvents = [
-  {
+  buildEvent({
     id: 'e1',
     title: '회의',
     date: '2025-01-01',
@@ -16,8 +17,8 @@ const sampleEvents = [
     category: '업무',
     repeat: { type: 'none', interval: 1 },
     notificationTime: 10,
-  },
-  {
+  }),
+  buildEvent({
     id: 'e2',
     title: '미팅',
     date: '2025-01-01',
@@ -28,18 +29,13 @@ const sampleEvents = [
     category: '업무',
     repeat: { type: 'none', interval: 1 },
     notificationTime: 10,
-  },
+  }),
 ];
 
 describe('OverlapWarningDialog', () => {
   it('겹치는 이벤트 목록을 렌더링한다', () => {
     setup(
-      <OverlapWarningDialog
-        isOpen
-        events={sampleEvents as any}
-        onCancel={() => {}}
-        onProceed={() => {}}
-      />
+      <OverlapWarningDialog isOpen events={sampleEvents} onCancel={() => {}} onProceed={() => {}} />
     );
     expect(screen.getByText('회의 (2025-01-01 09:00-10:00)')).toBeInTheDocument();
     expect(screen.getByText('미팅 (2025-01-01 09:30-10:30)')).toBeInTheDocument();
@@ -51,7 +47,7 @@ describe('OverlapWarningDialog', () => {
     const { user } = setup(
       <OverlapWarningDialog
         isOpen
-        events={sampleEvents as any}
+        events={sampleEvents}
         onCancel={onCancel}
         onProceed={onProceed}
       />
