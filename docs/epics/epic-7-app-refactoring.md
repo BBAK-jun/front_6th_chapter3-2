@@ -55,5 +55,6 @@
 - [Story 7-1: useEventForm 리팩터링](../stories/story-7-1-useEventForm-refactor.md)
 - [Story 7-2: 상태 축소와 computed UI](../stories/story-7-2-computed-state-ui.md)
 - [Story 7-3: 추상화 레벨 정렬](../stories/story-7-3-abstraction-levels.md)
+- [Story 7-4: 선언적 다이얼로그 관리(overlay-kit 도입)](../stories/story-7-4-overlay-declarative-dialogs.md)
 
 
