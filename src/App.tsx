@@ -137,8 +137,7 @@ function App() {
       // proceed true인 경우 아래 저장 로직 계속
     }
 
-    {
-      // 편집 + 모든 반복 일정 수정 선택 시: 동일 repeat.id 전체 일괄 수정
+    try {
       if (
         editingEvent &&
         selectionState.updateScope === 'all' &&
@@ -174,6 +173,11 @@ function App() {
         await saveEvent(eventData);
         resetForm();
       }
+      enqueueSnackbar('일정이 저장되었습니다.', { variant: 'success' });
+    } catch (error) {
+      enqueueSnackbar(error instanceof Error ? error.message : '일정 저장에 실패했습니다.', {
+        variant: 'error',
+      });
     }
   };
 

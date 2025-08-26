@@ -98,6 +98,7 @@ export const useEventForm = (initialEvent?: Event) => {
       weekdays,
       notificationTime,
     };
+
     return createEventsImpl(snapshot, {
       saveEvents,
       showSuccessMessage,
@@ -139,10 +140,10 @@ export const useEventForm = (initialEvent?: Event) => {
     handleEndTimeChange,
     resetForm,
     editEvent,
-    createEvents,
     excludeDates,
     setExcludeDates,
     weekdays,
     setWeekdays,
+    createEvents,
   };
 };
