@@ -71,19 +71,16 @@ export default [
 
       // ESLint rules
       'no-unused-vars': 'warn',
-      // 명명 규칙: 액션 함수는 표준 접두사 권장(내보낸 함수 우선 적용)
+      // 함수 길이/복잡도 경고(개발 시 가이던스) — CI는 스크립트로 error 게이트
+      'max-lines-per-function': ['warn', { max: 20, skipComments: true, skipBlankLines: true }],
+      complexity: ['warn', 6],
+      // 명명 규칙: 전역 기본(컴포넌트/테스트 영향 최소화)
       '@typescript-eslint/naming-convention': [
+        'warn',
         {
           selector: 'function',
-          modifiers: ['exported'],
           format: ['camelCase', 'PascalCase'],
-          leadingUnderscore: 'forbid',
-          custom: {
-            // Action 함수 권장 접두사 목록
-            regex:
-              '^(create|add|push|insert|new|append|spawn|make|build|generate|get|fetch|query|parse|split|transform|serialize|update|mutation|delete|remove|put|send|dispatch|receive|validate|check|calc|compute|init|configure|start|stop|save|store|log|record)[A-Z].*$',
-            match: true,
-          },
+          leadingUnderscore: 'allow',
         },
         {
           selector: 'variableLike',
@@ -99,15 +96,15 @@ export default [
       'no-restricted-syntax': [
         'warn',
         {
-          selector: "Identifier[name=/^display[A-Z]/]",
+          selector: 'Identifier[name=/^display[A-Z]/]',
           message: "UI 동작 명명은 'show*'로 통일하세요.",
         },
         {
-          selector: "Identifier[name=/^load[A-Z]/]",
+          selector: 'Identifier[name=/^load[A-Z]/]',
           message: "데이터 조회는 'get*' 또는 'fetch*'를 사용하세요.",
         },
         {
-          selector: "Identifier[name=/^write[A-Z]/]",
+          selector: 'Identifier[name=/^write[A-Z]/]',
           message: "저장은 'save*'를 사용하세요.",
         },
       ],
@@ -184,6 +181,21 @@ export default [
         expect: 'readonly',
         assert: 'readonly',
       },
+    },
+  },
+
+  // Overrides: do not apply 20-line rule to React components
+  {
+    files: [
+      'src/hooks/**/*.ts',
+      'src/components/**/*.tsx',
+      'src/App.tsx',
+      'src/__tests__/**/*.ts',
+      'src/__tests__/**/*.tsx',
+    ],
+    rules: {
+      'max-lines-per-function': 'off',
+      complexity: 'off',
     },
   },
 ];

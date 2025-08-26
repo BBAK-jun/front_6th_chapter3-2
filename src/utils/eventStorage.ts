@@ -4,6 +4,16 @@ import { generateEventInstances } from './repeatingEventUtils';
 
 const STORAGE_KEY = 'events';
 
+function shouldExpand(event: Event): boolean {
+  return event.repeat.type !== 'none';
+}
+
+function expandEvents(events: Event[]): Event[] {
+  return events.flatMap((event) =>
+    shouldExpand(event) ? generateEventInstances(event.repeat, event) : [event]
+  );
+}
+
 /**
  * 이벤트 목록을 로드하는 함수
  */
@@ -29,22 +39,9 @@ export async function loadEvents(): Promise<Event[]> {
  */
 export async function saveEvents(events: Event[]): Promise<boolean> {
   try {
-    // 기존 이벤트 로드
     const existingEvents = await loadEvents();
-
-    // 새 이벤트들을 반복 일정으로 확장
-    const expandedEvents = events.flatMap((event) => {
-      if (event.repeat.type === 'none') {
-        return [event];
-      }
-      return generateEventInstances(event.repeat, event);
-    });
-
-    // 기존 이벤트와 새 이벤트 병합
-    // 저장 전 최종 정규화
+    const expandedEvents = expandEvents(events);
     const allEvents = normalizeEvents([...existingEvents, ...expandedEvents]);
-
-    // 저장
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allEvents));
     return true;
   } catch (error) {

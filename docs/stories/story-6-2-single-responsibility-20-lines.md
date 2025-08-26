@@ -45,7 +45,7 @@ As a developer, I want small, focused functions so that code is easy to read, te
 
 ## Implementation Steps
 
-1. 린트 규칙 추가(`max-lines-per-function`, `complexity`) 및 CI 게이트 설정
+1. 린트 규칙 추가(`max-lines-per-function`, `complexity`) 및 CI 게이트 설정 (`pnpm run check:srp` 활용)
 2. 리포트 생성 후 상위 N개 초과 함수 우선 분해 계획 수립
 3. 분해/위임 및 유틸 추출, 테스트 추가(기존 테스트는 유지)
 4. 성능/메모리 확인 및 문서 갱신

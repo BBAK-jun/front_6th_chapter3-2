@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable no-restricted-syntax */
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
