@@ -23,7 +23,7 @@ As a developer, I want consistent and predictable names so that I can understand
 - 린트 설정: 액션/데이터 패턴을 `@typescript-eslint/naming-convention`으로 강제
 - 금지/치환 목록: `no-restricted-syntax` 또는 커스텀 룰로 `display↔show`, `load↔fetch`, `write↔save` 등의 혼용 방지
 - 코데모드: `ts-morph/jscodeshift`로 내부 심볼 대량 리네이밍(외부 export는 alias로 유지)
-- 문서: `docs/qa/naming-glossary.md`에 표 형태로 사례/허용·금지 패턴 기재
+- 문서: `docs/qa/naming-glossary.md`에 표 형태로 사례/허용·금지 패턴 기재 (본 스토리에서 참조)
 
 ## Definition of Done
 
@@ -48,7 +48,7 @@ As a developer, I want consistent and predictable names so that I can understand
 ## Implementation Steps
 
 1. `eslint.config.js`에 네이밍 규칙/금지 용어 반영 → CI 통합
-2. `docs/qa/naming-glossary.md` 초안 작성
+2. `docs/qa/naming-glossary.md` 초안 작성(본 문서에서 링크)
 3. 내부 심볼부터 일괄 리네이밍(테스트/공개 export 비변경) → 단계 PR
 4. alias 경로/이름 추가 후 사용처 천천히 이전
 5. 최종 린트/타입/테스트 그린 확인

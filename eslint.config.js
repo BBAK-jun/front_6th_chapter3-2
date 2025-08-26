@@ -71,6 +71,46 @@ export default [
 
       // ESLint rules
       'no-unused-vars': 'warn',
+      // 명명 규칙: 액션 함수는 표준 접두사 권장(내보낸 함수 우선 적용)
+      '@typescript-eslint/naming-convention': [
+        {
+          selector: 'function',
+          modifiers: ['exported'],
+          format: ['camelCase', 'PascalCase'],
+          leadingUnderscore: 'forbid',
+          custom: {
+            // Action 함수 권장 접두사 목록
+            regex:
+              '^(create|add|push|insert|new|append|spawn|make|build|generate|get|fetch|query|parse|split|transform|serialize|update|mutation|delete|remove|put|send|dispatch|receive|validate|check|calc|compute|init|configure|start|stop|save|store|log|record)[A-Z].*$',
+            match: true,
+          },
+        },
+        {
+          selector: 'variableLike',
+          format: ['camelCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'typeLike',
+          format: ['PascalCase'],
+        },
+      ],
+      // 혼용 용어 가이드(경고): 통일된 용어 사용 유도
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: "Identifier[name=/^display[A-Z]/]",
+          message: "UI 동작 명명은 'show*'로 통일하세요.",
+        },
+        {
+          selector: "Identifier[name=/^load[A-Z]/]",
+          message: "데이터 조회는 'get*' 또는 'fetch*'를 사용하세요.",
+        },
+        {
+          selector: "Identifier[name=/^write[A-Z]/]",
+          message: "저장은 'save*'를 사용하세요.",
+        },
+      ],
 
       // React rules
       'react/prop-types': 'off',

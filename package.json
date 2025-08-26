@@ -14,7 +14,9 @@
     "build": "tsc -b && vite build",
     "lint:eslint": "eslint . --ext ts,tsx --report-unused-disable-directives",
     "lint:tsc": "tsc --pretty",
-    "lint": "pnpm lint:eslint && pnpm lint:tsc"
+    "lint": "pnpm lint:eslint && pnpm lint:tsc",
+    "lint:fix:refactor": "eslint . --ext ts,tsx --fix",
+    "check:srp": "eslint . --ext ts,tsx --rule '@typescript-eslint/max-lines-per-function:[\"error\",20]' --rule 'complexity:[\"warn\",6]'"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",
