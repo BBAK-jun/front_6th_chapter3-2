@@ -1,6 +1,7 @@
 import { ChangeEvent, useState } from 'react';
 
 import { Event, RepeatType } from '../types';
+import { createEventsImpl, type FormSnapshot } from './useEventForm.helpers';
 import { saveEvents, showSuccessMessage } from '../utils/eventStorage';
 import { validateRepeatSettings, generateEventInstances } from '../utils/repeatingEventUtils';
 import { getTimeErrorMessage } from '../utils/timeValidation';
@@ -80,9 +81,8 @@ export const useEventForm = (initialEvent?: Event) => {
   };
 
   const createEvents = async (): Promise<Event[]> => {
-    // 기본 이벤트 객체 생성
-    const baseEvent: Event = {
-      id: editingEvent?.id || crypto.randomUUID(),
+    const snapshot: FormSnapshot = {
+      editingEventId: editingEvent?.id ?? null,
       title,
       date,
       startTime,
@@ -90,52 +90,20 @@ export const useEventForm = (initialEvent?: Event) => {
       description,
       location,
       category,
-      repeat: {
-        type: repeatType,
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-        excludeDates: excludeDates.length ? excludeDates : undefined,
-        weekdays: weekdays.length ? weekdays : undefined,
-      },
+      isRepeating,
+      repeatType,
+      repeatInterval,
+      repeatEndDate,
+      excludeDates,
+      weekdays,
       notificationTime,
     };
-
-    // 반복 설정이 있는 경우 유효성 검사
-    if (isRepeating) {
-      const repeatInfo = {
-        type: repeatType,
-        interval: repeatInterval,
-        endDate: repeatEndDate,
-        excludeDates,
-        weekdays,
-      };
-
-      if (!validateRepeatSettings(repeatInfo)) {
-        throw new Error('Invalid repeat settings');
-      }
-
-      // 반복 일정 생성
-      const events = generateEventInstances(repeatInfo, baseEvent);
-      const success = await saveEvents(events);
-
-      if (success) {
-        showSuccessMessage('반복 일정이 성공적으로 생성되었습니다.');
-        return events;
-      }
-
-      throw new Error('Failed to save repeating events');
-    }
-
-    // 이벤트 저장
-    const events = [baseEvent];
-    const success = await saveEvents(events);
-
-    if (success) {
-      showSuccessMessage('일정이 성공적으로 생성되었습니다.');
-      return events;
-    }
-
-    throw new Error('Failed to save events');
+    return createEventsImpl(snapshot, {
+      saveEvents,
+      showSuccessMessage,
+      validateRepeatSettings,
+      generateEventInstances,
+    });
   };
 
   return {
