@@ -1,30 +1,10 @@
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, within } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { SnackbarProvider } from 'notistack';
 
 import App from '../../App';
 import { server } from '../../setupTests';
 import { Event } from '../../types';
-
-const theme = createTheme();
-
-const setup = () => {
-  const user = userEvent.setup();
-  return {
-    ...render(
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <SnackbarProvider>
-          <App />
-        </SnackbarProvider>
-      </ThemeProvider>
-    ),
-    user,
-  };
-};
+import { setup } from '../utils/setup-render';
 
 it('단일 수정 저장 후 반복 아이콘이 사라진다', async () => {
   // Given: 반복 이벤트 1건 존재 + PUT 업데이트 지원
@@ -57,7 +37,7 @@ it('단일 수정 저장 후 반복 아이콘이 사라진다', async () => {
     })
   );
 
-  const { user } = setup();
+  const { user } = setup(<App />);
 
   // Then: 로딩 완료 및 초기 반복 아이콘 표시 확인
   await screen.findByText('일정 로딩 완료!');

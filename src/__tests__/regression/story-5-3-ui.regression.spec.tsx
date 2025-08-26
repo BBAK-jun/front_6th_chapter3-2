@@ -1,30 +1,10 @@
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, within } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { SnackbarProvider } from 'notistack';
 
 import App from '../../App';
 import { server } from '../../setupTests';
 import { Event } from '../../types';
-
-const theme = createTheme();
-
-const setup = () => {
-  const user = userEvent.setup();
-  return {
-    ...render(
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <SnackbarProvider>
-          <App />
-        </SnackbarProvider>
-      </ThemeProvider>
-    ),
-    user,
-  };
-};
+import { setup } from '../utils/setup-render';
 
 describe('Regression - Story 5.3 UI (단일 수정 단일화)', () => {
   it('이 일정만 수정 후 리스트에서 반복 표시가 제거된다', async () => {
@@ -57,7 +37,7 @@ describe('Regression - Story 5.3 UI (단일 수정 단일화)', () => {
       })
     );
 
-    const { user } = setup();
+    const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
     const list = within(screen.getByTestId('event-list'));

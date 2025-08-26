@@ -1,31 +1,11 @@
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, within } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
+import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { SnackbarProvider } from 'notistack';
 
 import { setupMockHandlerBulkOperations } from '../../__mocks__/handlersUtils';
 import App from '../../App';
 import { server } from '../../setupTests';
 import type { Event } from '../../types';
-
-const theme = createTheme();
-
-const setup = () => {
-  const user = userEvent.setup();
-  return {
-    ...render(
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <SnackbarProvider>
-          <App />
-        </SnackbarProvider>
-      </ThemeProvider>
-    ),
-    user,
-  };
-};
+import { setup } from '../utils/setup-render';
 
 function makeGroupEvents(groupId: string): Event[] {
   return [
@@ -59,7 +39,7 @@ function makeGroupEvents(groupId: string): Event[] {
 describe('Regression - Story 3.3 UI', () => {
   it('삭제 범위가 all일 때 확인 다이얼로그에서 삭제를 누르면 그룹 전체가 삭제된다', async () => {
     setupMockHandlerBulkOperations(makeGroupEvents('repeat-del-xyz'));
-    const { user } = setup();
+    const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
 
@@ -86,7 +66,7 @@ describe('Regression - Story 3.3 UI', () => {
 
   it('삭제 확인 다이얼로그에서 취소하면 삭제되지 않는다', async () => {
     setupMockHandlerBulkOperations(makeGroupEvents('repeat-del-cancel'));
-    const { user } = setup();
+    const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
     const list = within(screen.getByTestId('event-list'));
@@ -128,7 +108,7 @@ describe('Regression - Story 3.3 UI', () => {
         return new HttpResponse(null, { status: 404 });
       })
     );
-    const { user } = setup();
+    const { user } = setup(<App />);
     await screen.findByText('일정 로딩 완료!');
     const list = within(screen.getByTestId('event-list'));
     const delButtons = await list.findAllByLabelText('Delete event');

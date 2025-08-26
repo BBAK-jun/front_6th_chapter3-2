@@ -1,10 +1,6 @@
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, within, act } from '@testing-library/react';
-import { UserEvent, userEvent } from '@testing-library/user-event';
+import { act, screen, within } from '@testing-library/react';
+import { UserEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { SnackbarProvider } from 'notistack';
-import { ReactElement } from 'react';
 
 import {
   setupMockHandlerCreation,
@@ -14,23 +10,7 @@ import {
 import App from '../App';
 import { server } from '../setupTests';
 import { Event } from '../types';
-
-const theme = createTheme();
-
-// ! Hard 여기 제공 안함
-const setup = (element: ReactElement) => {
-  const user = userEvent.setup();
-
-  return {
-    ...render(
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <SnackbarProvider>{element}</SnackbarProvider>
-      </ThemeProvider>
-    ),
-    user,
-  };
-};
+import { setup } from './utils/setup-render';
 
 // ! Hard 여기 제공 안함
 const saveSchedule = async (

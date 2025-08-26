@@ -1,29 +1,9 @@
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, within } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
-import { SnackbarProvider } from 'notistack';
+import { screen, within } from '@testing-library/react';
 
 import { setupMockHandlerBulkOperations } from '../../__mocks__/handlersUtils';
 import App from '../../App';
 import type { Event } from '../../types';
-
-const theme = createTheme();
-
-const setup = () => {
-  const user = userEvent.setup();
-  return {
-    ...render(
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <SnackbarProvider>
-          <App />
-        </SnackbarProvider>
-      </ThemeProvider>
-    ),
-    user,
-  };
-};
+import { setup } from '../utils/setup-render';
 
 function makeGroupEvents(groupId: string): Event[] {
   return [
@@ -57,7 +37,7 @@ function makeGroupEvents(groupId: string): Event[] {
 describe('Regression - Story 3.1 UI', () => {
   it('선택 모드에서 그룹 선택 후 "그룹 수정"으로 일괄 제목 변경이 반영된다', async () => {
     setupMockHandlerBulkOperations(makeGroupEvents('repeat-xyz'));
-    const { user } = setup();
+    const { user } = setup(<App />);
 
     // 초기 로딩 완료 스낵바 대기
     await screen.findByText('일정 로딩 완료!');
@@ -84,7 +64,7 @@ describe('Regression - Story 3.1 UI', () => {
 
   it('선택 모드에서 그룹 선택 후 "그룹 삭제"로 그룹의 모든 항목이 삭제된다', async () => {
     setupMockHandlerBulkOperations(makeGroupEvents('repeat-delete'));
-    const { user } = setup();
+    const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
     await user.click(screen.getByText('선택 모드'));
