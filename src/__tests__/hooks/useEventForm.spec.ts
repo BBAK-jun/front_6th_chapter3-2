@@ -132,10 +132,10 @@ describe('useEventForm', () => {
     const { result } = renderHook(() => useEventForm());
 
     await act(async () => {
-      result.current.handleEndTimeChange({ target: { value: '00:00' } } as any);
+      result.current.handleEndTimeChange({ target: { value: '00:00' } });
     });
     await act(async () => {
-      result.current.handleStartTimeChange({ target: { value: '23:59' } } as any);
+      result.current.handleStartTimeChange({ target: { value: '23:59' } });
     });
 
     expect(result.current.startTimeError).toBeTruthy();
@@ -148,8 +148,8 @@ describe('useEventForm', () => {
     await act(async () => {
       result.current.setTitle('All Day');
       result.current.setDate('2024-01-01');
-      result.current.handleStartTimeChange({ target: { value: '00:00' } } as any);
-      result.current.handleEndTimeChange({ target: { value: '23:59' } } as any);
+      result.current.handleStartTimeChange({ target: { value: '00:00' } });
+      result.current.handleEndTimeChange({ target: { value: '23:59' } });
       result.current.setRepeatType('none');
     });
 

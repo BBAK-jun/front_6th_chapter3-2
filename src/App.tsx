@@ -20,17 +20,15 @@ import { getWeekDates, getWeeksAtMonth } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
 // no-op
 
-const categories = ['업무', '개인', '가족', '기타'];
-
-// moved to CalendarViewPanel
-
+// 상수를 외부로 이동하여 컴포넌트 재렌더링 시 재생성 방지
+const categories = ['업무', '개인', '가족', '기타'] as const;
 const notificationOptions = [
   { value: 1, label: '1분 전' },
   { value: 10, label: '10분 전' },
   { value: 60, label: '1시간 전' },
   { value: 120, label: '2시간 전' },
   { value: 1440, label: '1일 전' },
-];
+] as const;
 
 function App() {
   const {
@@ -80,10 +78,13 @@ function App() {
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
 
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [updateScope, setUpdateScope] = useState<'single' | 'all'>('single');
-  const [deleteScope, setDeleteScope] = useState<'single' | 'all'>('single');
+  // 선택 관련 상태를 단일 객체로 통합하여 상태 수 감소
+  const [selectionState, setSelectionState] = useState({
+    mode: false,
+    selectedIds: [] as string[],
+    updateScope: 'single' as const,
+    deleteScope: 'single' as const,
+  });
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -135,7 +136,7 @@ function App() {
       // 편집 + 모든 반복 일정 수정 선택 시: 동일 repeat.id 전체 일괄 수정
       if (
         editingEvent &&
-        updateScope === 'all' &&
+        selectionState.updateScope === 'all' &&
         editingEvent.repeat.type !== 'none' &&
         editingEvent.repeat.id
       ) {
@@ -158,7 +159,11 @@ function App() {
         resetForm();
       } else {
         // 편집 + 이 일정만 수정: 단일화 처리하여 저장
-        if (editingEvent && updateScope === 'single' && editingEvent.repeat.type !== 'none') {
+        if (
+          editingEvent &&
+          selectionState.updateScope === 'single' &&
+          editingEvent.repeat.type !== 'none'
+        ) {
           (eventData as Event).repeat = { type: 'none', interval: 1 } as Event['repeat'];
         }
         await saveEvent(eventData);
@@ -236,10 +241,14 @@ function App() {
             excludeDates={excludeDates}
             setExcludeDates={setExcludeDates}
             onSubmit={addOrUpdateEvent}
-            updateScope={updateScope}
-            setUpdateScope={setUpdateScope}
-            deleteScope={deleteScope}
-            setDeleteScope={setDeleteScope}
+            updateScope={selectionState.updateScope}
+            setUpdateScope={(scope) =>
+              setSelectionState((prev) => ({ ...prev, updateScope: scope }))
+            }
+            deleteScope={selectionState.deleteScope}
+            setDeleteScope={(scope) =>
+              setSelectionState((prev) => ({ ...prev, deleteScope: scope }))
+            }
           />
         </Stack>
 
@@ -261,28 +270,27 @@ function App() {
           filteredEvents={filteredEvents}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
-          selectionMode={selectionMode}
-          setSelectionMode={setSelectionMode}
-          selectedIds={selectedIds}
-          setSelectedIds={setSelectedIds}
+          selectionMode={selectionState.mode}
+          setSelectionMode={(mode) => setSelectionState((prev) => ({ ...prev, mode }))}
+          selectedIds={selectionState.selectedIds}
+          setSelectedIds={(ids) => setSelectionState((prev) => ({ ...prev, selectedIds: ids }))}
           notifiedEvents={notifiedEvents}
           notificationLabelByValue={notificationLabelByValue}
           editEvent={editEvent}
-          deleteScope={deleteScope}
+          deleteScope={selectionState.deleteScope}
           deleteEvent={deleteEvent}
           onConfirmDelete={async (ids) => {
             const confirmed = await overlay.openAsync<boolean>(({ isOpen, close }) => (
               <DeleteConfirmDialog
                 isOpen={isOpen}
-                isAll={deleteScope === 'all'}
+                isAll={selectionState.deleteScope === 'all'}
                 onCancel={() => close(false)}
                 onConfirm={() => close(true)}
               />
             ));
             if (!confirmed) return;
             await deleteBulkEvents(ids);
-            setSelectedIds([]);
-            setSelectionMode(false);
+            setSelectionState((prev) => ({ ...prev, selectedIds: [], mode: false }));
           }}
           onOpenBulkEdit={async (ids) => {
             const result = await overlay.openAsync<string | null>(({ isOpen, close }) => (
@@ -297,13 +305,11 @@ function App() {
               .filter((e) => ids.includes(e.id))
               .map((e) => ({ ...e, title: result }));
             await updateBulkEvents(updated as Event[]);
-            setSelectedIds([]);
-            setSelectionMode(false);
+            setSelectionState((prev) => ({ ...prev, selectedIds: [], mode: false }));
           }}
           onDeleteSelectedImmediate={async (ids) => {
             await deleteBulkEvents(ids);
-            setSelectedIds([]);
-            setSelectionMode(false);
+            setSelectionState((prev) => ({ ...prev, selectedIds: [], mode: false }));
           }}
         />
       </Stack>
