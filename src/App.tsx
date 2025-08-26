@@ -1,23 +1,13 @@
 import { Close } from '@mui/icons-material';
-import {
-  Alert,
-  AlertTitle,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, AlertTitle, Box, IconButton, Stack } from '@mui/material';
 import { useSnackbar } from 'notistack';
+import { overlay } from 'overlay-kit';
 import { useMemo, useState } from 'react';
 
 import { CalendarViewPanel } from './components/CalendarViewPanel';
+import { BulkEditDialog } from './components/dialogs/BulkEditDialog';
+import { DeleteConfirmDialog } from './components/dialogs/DeleteConfirmDialog';
+import { OverlapWarningDialog } from './components/dialogs/OverlapWarningDialog';
 import { EventFormPanel } from './components/EventFormPanel';
 import { EventListPanel } from './components/EventListPanel';
 import { useCalendarView } from './hooks/useCalendarView.ts';
@@ -90,16 +80,10 @@ function App() {
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
 
-  const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkEditOpen, setBulkEditOpen] = useState(false);
-  const [bulkEditTitle, setBulkEditTitle] = useState('');
   const [updateScope, setUpdateScope] = useState<'single' | 'all'>('single');
   const [deleteScope, setDeleteScope] = useState<'single' | 'all'>('single');
-  // 확인 다이얼로그는 선택된 삭제 대상 유무로 파생(open)되도록 상태 축소
-  // const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -135,8 +119,19 @@ function App() {
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
-      setOverlappingEvents(overlapping);
-    } else {
+      const proceed = await overlay.openAsync<boolean>(({ isOpen, close }) => (
+        <OverlapWarningDialog
+          isOpen={isOpen}
+          events={overlapping}
+          onCancel={() => close(false)}
+          onProceed={() => close(true)}
+        />
+      ));
+      if (!proceed) return;
+      // proceed true인 경우 아래 저장 로직 계속
+    }
+
+    {
       // 편집 + 모든 반복 일정 수정 선택 시: 동일 repeat.id 전체 일괄 수정
       if (
         editingEvent &&
@@ -188,6 +183,7 @@ function App() {
     }
     return dateStringToEvents;
   }, [filteredEvents]);
+
   const eventsByDay = useMemo(() => {
     const dayToEventsMap = new Map<number, Event[]>();
     for (const eventItem of filteredEvents) {
@@ -273,114 +269,44 @@ function App() {
           notificationLabelByValue={notificationLabelByValue}
           editEvent={editEvent}
           deleteScope={deleteScope}
-          setPendingDeleteIds={setPendingDeleteIds}
           deleteEvent={deleteEvent}
-          setBulkEditOpen={setBulkEditOpen}
-          deleteBulkEvents={deleteBulkEvents}
+          onConfirmDelete={async (ids) => {
+            const confirmed = await overlay.openAsync<boolean>(({ isOpen, close }) => (
+              <DeleteConfirmDialog
+                isOpen={isOpen}
+                isAll={deleteScope === 'all'}
+                onCancel={() => close(false)}
+                onConfirm={() => close(true)}
+              />
+            ));
+            if (!confirmed) return;
+            await deleteBulkEvents(ids);
+            setSelectedIds([]);
+            setSelectionMode(false);
+          }}
+          onOpenBulkEdit={async (ids) => {
+            const result = await overlay.openAsync<string | null>(({ isOpen, close }) => (
+              <BulkEditDialog
+                isOpen={isOpen}
+                onCancel={() => close(null)}
+                onSave={(v) => close(v)}
+              />
+            ));
+            if (!result) return;
+            const updated = events
+              .filter((e) => ids.includes(e.id))
+              .map((e) => ({ ...e, title: result }));
+            await updateBulkEvents(updated as Event[]);
+            setSelectedIds([]);
+            setSelectionMode(false);
+          }}
+          onDeleteSelectedImmediate={async (ids) => {
+            await deleteBulkEvents(ids);
+            setSelectedIds([]);
+            setSelectionMode(false);
+          }}
         />
       </Stack>
-
-      <Dialog open={overlappingEvents.length > 0} onClose={() => setOverlappingEvents([])}>
-        <DialogTitle>일정 겹침 경고</DialogTitle>
-        <DialogContent>
-          <DialogContentText component="div">
-            다음 일정과 겹칩니다:
-            {overlappingEvents.map((event) => (
-              <Typography key={event.id}>
-                {event.title} ({event.date} {event.startTime}-{event.endTime})
-              </Typography>
-            ))}
-            계속 진행하시겠습니까?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOverlappingEvents([])}>취소</Button>
-          <Button
-            color="error"
-            onClick={() => {
-              setOverlappingEvents([]);
-              saveEvent({
-                id: editingEvent ? editingEvent.id : undefined,
-                title,
-                date,
-                startTime,
-                endTime,
-                description,
-                location,
-                category,
-                repeat: {
-                  type: isRepeating ? repeatType : 'none',
-                  interval: repeatInterval,
-                  endDate: repeatEndDate || undefined,
-                  ...(excludeDates.length ? { excludeDates } : {}),
-                  ...(repeatType === 'weekly' && weekdays.length ? { weekdays } : {}),
-                },
-                notificationTime,
-              });
-            }}
-          >
-            계속 진행
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={bulkEditOpen} onClose={() => setBulkEditOpen(false)}>
-        <DialogTitle>그룹 수정</DialogTitle>
-        <DialogContent>
-          <DialogContentText>선택된 이벤트들의 제목을 일괄 변경합니다.</DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="새 제목"
-            fullWidth
-            variant="standard"
-            value={bulkEditTitle}
-            onChange={(e) => setBulkEditTitle(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setBulkEditOpen(false)}>취소</Button>
-          <Button
-            onClick={async () => {
-              const updated = events
-                .filter((e) => selectedIds.includes(e.id))
-                .map((e) => ({ ...e, title: bulkEditTitle }));
-              await updateBulkEvents(updated as Event[]);
-              setBulkEditOpen(false);
-              setSelectedIds([]);
-              setSelectionMode(false);
-              setBulkEditTitle('');
-            }}
-            disabled={!bulkEditTitle}
-          >
-            저장
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={pendingDeleteIds.length > 0} onClose={() => setPendingDeleteIds([])}>
-        <DialogTitle>삭제 확인</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {deleteScope === 'all'
-              ? '정말 모든 반복 일정을 삭제하시겠습니까?'
-              : '정말 이 일정을 삭제하시겠습니까?'}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPendingDeleteIds([])}>취소</Button>
-          <Button
-            color="error"
-            onClick={async () => {
-              await deleteBulkEvents(pendingDeleteIds);
-              setPendingDeleteIds([]);
-              setPendingDeleteIds([]);
-            }}
-          >
-            삭제
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       {notifications.length > 0 && (
         <Stack position="fixed" top={16} right={16} spacing={2} alignItems="flex-end">

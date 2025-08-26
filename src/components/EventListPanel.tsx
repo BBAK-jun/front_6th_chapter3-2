@@ -10,10 +10,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import React from 'react';
 
 import { Event } from '../types';
-// no-op
 
 interface EventListPanelProps {
   events: Event[];
@@ -28,10 +26,10 @@ interface EventListPanelProps {
   notificationLabelByValue: Map<number, string>;
   editEvent: (event: Event) => void;
   deleteScope: 'single' | 'all';
-  setPendingDeleteIds: (ids: string[]) => void;
   deleteEvent: (id: string) => Promise<void> | void;
-  setBulkEditOpen: (value: boolean) => void;
-  deleteBulkEvents: (ids: string[]) => Promise<void> | void;
+  onConfirmDelete: (ids: string[]) => Promise<void> | void;
+  onOpenBulkEdit: (selectedIds: string[]) => void;
+  onDeleteSelectedImmediate: (ids: string[]) => Promise<void> | void;
 }
 
 export function EventListPanel(props: EventListPanelProps) {
@@ -48,10 +46,10 @@ export function EventListPanel(props: EventListPanelProps) {
     notificationLabelByValue,
     editEvent,
     deleteScope,
-    setPendingDeleteIds,
     deleteEvent,
-    setBulkEditOpen,
-    deleteBulkEvents,
+    onConfirmDelete,
+    onOpenBulkEdit,
+    onDeleteSelectedImmediate,
   } = props;
 
   return (
@@ -84,7 +82,7 @@ export function EventListPanel(props: EventListPanelProps) {
                 color="primary"
                 variant="contained"
                 disabled={selectedIds.length === 0}
-                onClick={() => setBulkEditOpen(true)}
+                onClick={() => onOpenBulkEdit(selectedIds)}
               >
                 그룹 수정
               </Button>
@@ -94,9 +92,7 @@ export function EventListPanel(props: EventListPanelProps) {
                 variant="contained"
                 disabled={selectedIds.length === 0}
                 onClick={async () => {
-                  await deleteBulkEvents(selectedIds);
-                  setSelectedIds([]);
-                  setSelectionMode(false);
+                  await onDeleteSelectedImmediate(selectedIds);
                 }}
               >
                 그룹 삭제
@@ -193,7 +189,7 @@ export function EventListPanel(props: EventListPanelProps) {
                         const groupIds = events
                           .filter((e) => e.repeat.id === event.repeat.id)
                           .map((e) => e.id);
-                        setPendingDeleteIds(deleteScope === 'all' ? groupIds : [event.id]);
+                        void onConfirmDelete(deleteScope === 'all' ? groupIds : [event.id]);
                       } else {
                         void deleteEvent(event.id);
                       }
