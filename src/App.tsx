@@ -21,14 +21,14 @@ import { findOverlappingEvents } from './utils/eventOverlap';
 // no-op
 
 // 상수를 외부로 이동하여 컴포넌트 재렌더링 시 재생성 방지
-const categories = ['업무', '개인', '가족', '기타'] as const;
+const categories = ['업무', '개인', '가족', '기타'];
 const notificationOptions = [
   { value: 1, label: '1분 전' },
   { value: 10, label: '10분 전' },
   { value: 60, label: '1시간 전' },
   { value: 120, label: '2시간 전' },
   { value: 1440, label: '1일 전' },
-] as const;
+];
 
 function App() {
   const {
@@ -79,11 +79,16 @@ function App() {
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
 
   // 선택 관련 상태를 단일 객체로 통합하여 상태 수 감소
-  const [selectionState, setSelectionState] = useState({
+  const [selectionState, setSelectionState] = useState<{
+    mode: boolean;
+    selectedIds: string[];
+    updateScope: 'single' | 'all';
+    deleteScope: 'single' | 'all';
+  }>({
     mode: false,
-    selectedIds: [] as string[],
-    updateScope: 'single' as const,
-    deleteScope: 'single' as const,
+    selectedIds: [],
+    updateScope: 'single',
+    deleteScope: 'single',
   });
 
   const { enqueueSnackbar } = useSnackbar();
