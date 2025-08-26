@@ -127,4 +127,37 @@ describe('useEventForm', () => {
     expect(result.current.repeatInterval).toBe(1);
     expect(result.current.notificationTime).toBe(30);
   });
+
+  it('should set time error when startTime >= endTime (boundary 23:59 vs 00:00)', async () => {
+    const { result } = renderHook(() => useEventForm());
+
+    await act(async () => {
+      result.current.handleEndTimeChange({ target: { value: '00:00' } } as any);
+    });
+    await act(async () => {
+      result.current.handleStartTimeChange({ target: { value: '23:59' } } as any);
+    });
+
+    expect(result.current.startTimeError).toBeTruthy();
+    expect(result.current.endTimeError).toBeTruthy();
+  });
+
+  it('should create an all-day-like event (00:00~23:59) without time errors', async () => {
+    const { result } = renderHook(() => useEventForm());
+
+    await act(async () => {
+      result.current.setTitle('All Day');
+      result.current.setDate('2024-01-01');
+      result.current.handleStartTimeChange({ target: { value: '00:00' } } as any);
+      result.current.handleEndTimeChange({ target: { value: '23:59' } } as any);
+      result.current.setRepeatType('none');
+    });
+
+    expect(result.current.startTimeError).toBeNull();
+    expect(result.current.endTimeError).toBeNull();
+
+    const events = await result.current.createEvents();
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ startTime: '00:00', endTime: '23:59' });
+  });
 });
